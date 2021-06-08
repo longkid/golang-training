@@ -1,13 +1,47 @@
-package producer
+package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 
 	"github.com/Shopify/sarama"
 )
 
+const (
+	BROKER_URL = "localhost:9092"
+	TOPIC      = "golang-assignment-events"
+)
+
+func main() {
+	// Create producer
+	producer, err := createProducer()
+	if err != nil {
+		panic(err)
+	}
+
+	defer producer.Close()
+
+	// Read input from console
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		fmt.Print("\nEnter message to publish: ")
+		scanner.Scan()
+		msg := scanner.Text()
+
+		publish(msg, producer)
+	}
+
+}
+
 // Connect to Apache Kafka using sarama as Producer
-func createProducer(brokersUrl []string) (sarama.SyncProducer, error) {
+func createProducer() (sarama.SyncProducer, error) {
+	brokerUrl := os.Getenv("BROKER_URL")
+	if brokerUrl == "" {
+		brokerUrl = BROKER_URL
+	}
+
+	brokersUrl := []string{brokerUrl}
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.RequiredAcks = sarama.WaitForAll
@@ -15,23 +49,16 @@ func createProducer(brokersUrl []string) (sarama.SyncProducer, error) {
 
 	// NewSyncProducer creates a new SyncProducer using the given broker addresses and configuration.
 	producer, err := sarama.NewSyncProducer(brokersUrl, config)
-	if err != nil {
-		return nil, err
-	}
 
-	return producer, nil
+	return producer, err
 }
 
 // Push a message to topic using sarama
-func Publish(topic string, message string) error {
-	// TODO How to parameterize brokerUrl "localhost:9092"?
-	brokersUrl := []string{"localhost:9092"}
-	producer, err := createProducer(brokersUrl)
-	if err != nil {
-		return err
+func publish(message string, producer sarama.SyncProducer) error {
+	topic := os.Getenv("TOPIC")
+	if topic == "" {
+		topic = TOPIC
 	}
-
-	defer producer.Close()
 
 	msg := &sarama.ProducerMessage{
 		Topic: topic,                         // Kafka topic for this message

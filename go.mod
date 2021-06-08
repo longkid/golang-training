@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/Shopify/sarama v1.29.0 // indirect
 	github.com/gin-gonic/gin v1.7.2 // indirect
+	github.com/joho/godotenv v1.3.0
 	gopkg.in/jcmturner/aescts.v1 v1.0.1 // indirect
 	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect

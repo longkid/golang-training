@@ -9,17 +9,24 @@ import (
 	"github.com/Shopify/sarama"
 )
 
-func main() {
+const (
+	BROKER_URL = "localhost:9092"
+	TOPIC      = "golang-assignment-events"
+)
 
-	brokersUrl := []string{"localhost:9092"}
-	consumer, err := createConsumer(brokersUrl)
+func main() {
+	consumer, err := createConsumer()
 	if err != nil {
 		panic(err)
 	}
 
 	defer consumer.Close()
 
-	topic := "golang-assignment-events"
+	topic := os.Getenv("TOPIC")
+	if topic == "" {
+		topic = TOPIC
+	}
+
 	partitionConsumer, err := consumer.ConsumePartition(topic, 0, sarama.OffsetOldest)
 	if err != nil {
 		panic(err)
@@ -52,15 +59,18 @@ func main() {
 }
 
 // Connect to Apache Kafka as Consumer
-func createConsumer(brokersUrl []string) (sarama.Consumer, error) {
+func createConsumer() (sarama.Consumer, error) {
+	brokerUrl := os.Getenv("BROKER_URL")
+	if brokerUrl == "" {
+		brokerUrl = BROKER_URL
+	}
+
+	brokersUrl := []string{brokerUrl}
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
 
 	// NewConsumer creates a new consumer using the given broker addresses and configuration
 	consumer, err := sarama.NewConsumer(brokersUrl, config)
-	if err != nil {
-		return nil, err
-	}
 
-	return consumer, nil
+	return consumer, err
 }
